@@ -1,0 +1,216 @@
+import numpy as np  
+import random
+
+
+def GOS(noc_b,noc_h):       #defining function GOS to calculate grade of service
+        return (noc_b/noc_h)
+
+def Print_Output(noc,nocb,gos):
+        print("The number of calls attempted = {0:d} ".format(noc))                      #printing the number of calls attempted
+        print("The number of calls blocked = {0:d} ".format(nocb))                        #printing the number of calls blocked
+        print("The grade of service = {0:5.3f} ".format(gos))                             #printing the total grade of service     
+        
+def SIM_1():
+    ac=0                        #counter to keep number of active calls
+    noc=0                       #number of channels in use
+    noct=0                      #number of calls
+    arpu=0                      #variable storing the average call rate per user
+    gos=0                       #the total grade of service
+    nocb=0                      #number of calls blocked
+
+    T_USERS=162                 #number of total users
+
+    ar_pu=[]                    #list storing the average call rate per user for each user making a call
+    noch=[0,0,0,0,0,0]          #number of calls each hour
+    gosh=[0,0,0,0,0,0]          #the grade of service each hour
+    nocbh=[0,0,0,0,0,0]         #number of calls blocked per hour
+    cdd=[]                      #list having the call durations of all users
+    R=[1,1.5,2,3,5]             #list storing the distance values
+    rd=[]                       #list storing the remaining call duration
+    
+    for ctr1 in range(6):       #loop running each hour for 6 hours
+            noch=0              #number of calls each hour
+            gosh=0              #the grade of service each hour
+            nocbh=0             #number of calls blocked per hour
+            for ctr2 in range(3600):                                      #loop running each second
+                users=1                                                   #counter to store the user number
+        
+                while(users<=T_USERS):
+                    arpu=random.uniform(0,1)                              #the average call rate per user taken from a sample of uniform distribution
+                
+                    if arpu<=1/3600:                                      #if call rate per user less than 1/3600 user makes call
+
+                       if(ac<15):                                              #the number of active calls increases
+                                 cd=(int)(np.random.exponential(180,1))        #sampling the exponential distribution for getting the call duration
+                                 ar_pu.append(arpu)
+                                 rd.append(cd)                                 #adding the remaining call duration to the rd list
+                                 ac=len(rd)
+                                 noch+=1                                       #number of calls per hour increases
+                                 noc+=1                                        #the channels in use getting incremented
+                                 avail_chan=15-ac                              #for each active call the number of available channels decreases
+                        
+                       else:
+                                 nocb+=1                                       #number of calls blocked incremented if channels are unavailable
+                                 nocbh+=1                                 #number of calls blocked per hour incremented if channels are unavailable
+            
+                    users+=1                                              #incrementing the number of users
+                for ctr3 in range(len(rd)):
+                                      if rd[ctr3]>0:
+                                          rd[ctr3]=rd[ctr3]-1             #the remaining duration gets decremented each second
+                for ctr3 in range(len(rd)):
+                                      if rd[ctr3]<=0:
+                                          rd.remove(rd[ctr3])             #the last element becomes zero
+                                          ac=len(rd)
+                                          break
+                                
+            gosh=GOS(nocbh,noch)                                          #calculating the grade of service as the ratio of number of calls blocked per hour to the number of calls per hour
+            print("\nThe number of calls attempted in {0:d} hour('s) = {1:d}".format(ctr1+1,noch))    #printing the number off calls attempted for each hour
+            print("The number of calls blocked in {0:d} hour('s) = {1:d}".format(ctr1+1,nocbh))     #printing the number off calls blocked for each hour
+            print("The grade of service in {0:d} hour('s) = {1:5.3f}\n".format(ctr1+1,gosh))           #printing the grade of service for each hour                       
+                                                                          #incrementing the counter for each hour
+        
+    gos=GOS(nocb,noc)                                                     #method calculating the grade of service 
+    Print_Output(noc,nocb,gos)                                                        #method to print values                                       
+                
+SIM_1()                                                                   #method calling simulation 1 
+
+
+    
+                
+                
+import numpy as np
+import random
+
+def User_Input():
+    return (float(input("Enter the cell Radius :")))      
+    
+def Shadow():
+    return (np.random.normal(0,2))                                          #method calculating shadowing effect with normal distribution with zero mean and standard deveiation 2
+
+def Fade():                                                                 #method calculating fade effect
+    x=np.random.uniform(0,1)
+    y=np.random.uniform(0,1)
+   
+    z=x+1j*y
+    fade=10*np.log10(abs(z))
+    return fade                                                             
+    
+def Path_Loss(distance,FREQ,B_HEIGHT):                                                    #method calculating path loss
+    pl=69.55+26.16*np.log10(FREQ)-13.82*np.log10(B_HEIGHT)+(44.9-6.55*np.log10(B_HEIGHT))*np.log10(distance)
+    return pl
+
+def Print_Final_Output(nocb,nocd,noc):                                                                                                    #method to print values                                       
+    gos_old=nocb/noc                                                                                                         #calculating the old grade of service
+    gos_new=(nocb+nocd)/noc  
+    print('\n\nThe total number of calls blocked = {0:d}'.format(nocb),'\nThe total number of calls dropped = {0:d}'.format(nocd)             )#printing the total number of calls blocked and dropped 
+    print('The total number of calls attempted = {0:d}'.format(noc))                                                                           #printing the number of calls attempted in an hour
+    print('The new total Grade of Service = {0:f}'.format(gos_new))                                                                            #printing the total gos
+    print('The old total Grade of Service = {0:f}\n\n'.format(gos_old))                                                                        #printing the total old gos
+
+def Print_Results_Hour(gos_new_hour,gos_old_hour,ctr1,nocbh,nocdh,noch):
+    print('\nThe number of calls blocked in {0:d} hour = {1:d}'.format(ctr1,nocbh),'\nThe number of calls dropped in {0:d} hour = {1:d}'.format(ctr1,nocdh)) #printing the total calls blocked and dropped per hour
+    print('The new Grade of Service in {0:d} hours ={1:4.3f}'.format(ctr1,gos_new_hour))                    #printing the new grade of service per hour
+    print('The old Grade of Service in {0:d} hours ={1:4.3f}'.format(ctr1,gos_old_hour))                    #printing the old grade of service per hour
+    print('The number of calls attempted in {0:d} hour = {1:d}'.format(ctr1,noch))                          #printing the number of calls attempted in an hour
+
+def SIM_2():
+    cd=[]                                                                       #list storing call duration
+    cdArray=[]                                                                  #call duration array
+    nocbs=[]                                                                    #list of blocked calls each hour
+    CallAttempts=[]                                                             #list storing the call attempts
+    avg_rsl_list=[]                                                             #list storing the average received signal level
+
+    active_ch=0                                                                 #counter storing the number of active channels
+    Users_Active=0                                                              #counter storing the number of active users
+    nocb=0                                                                      #counter storing the number of calls blocked
+    ctr1=0                                                                      #counter which runs for each hour
+    nocb=0                                                                      #counter which stores the number of blocked calls
+    users=0                                                                     #counter for each user
+    noc=0                                                                       #counter for number of calls
+    nocd=0                                                                      #counter for number of calls dropped
+    gos_old=0                                                                   #variable storing the old grade of service
+    gos_new=0                                                                   #variable storing the new grade of service
+    
+    AVAIL_CH=15                                                                 #the total channels available
+    EIRP=55                                                                     #the base station EIRP
+    MOB_THRESH=-102                                                             #the mobile receiver threshold
+    FREQ=900                                                                    #the frequency of the cellular basestation
+    B_HEIGHT =50                                                                #the height of the base station
+
+    Rad=User_Input()
+
+    while ctr1<6:                                                               #loop which runs for 6 hours
+        noch=0
+        nocbh=0
+        nocdh=0
+
+        for ctr3 in range(0,3600):           
+            if 0 in cd:
+                Index=cd.index(0)                                               #finding the index of element containing zero call duration
+                cd.remove(0)                                                    #removing from call which has ended i.e duration zero
+                del avg_rsl_list[Index]                                         #deletig the list of average rsl
+                Users_Active-=1                                                 #decrementing the number of active users
+                active_ch-=1                                                    #decrementing the number of active channels
+            else:
+                 for n in cd:                                                   #iterating each element in call duration
+                    F=cd.index(n)
+                    rsl_cur=avg_rsl_list[F]+Fade()                              #calculating the current rsl by adding fade to the average rsl
+                    if(rsl_cur<MOB_THRESH):                                     #the call will be dropped if there is no enough received signal level
+                        nocdh+=1                                                #the call dropped per hour increases
+                        nocd+=1                                                 #the call dropped counter increases
+                        active_ch-=1                                            #the number of active channel decreases if call is dropped
+                        del avg_rsl_list[F]                                     #each element will be removed from the average rsl list
+                        Users_Active-=1                                         #active users will decrease each second the call is dropped
+                        cd.remove(n)                                            #the element will be removed from the call duration list too
+                 cd_array=np.array(cd)                                          #converting the call duration list to an cd_array for decrementing
+                 cd_array=cd_array-1                                            #decrementing each second
+                 cd=list(cd_array)                                              #converting the call duration array into a list
+
+            for users in range(0,162):
+                crpu=random.uniform(0,1)
+
+                if(crpu<=1/3600):
+                    noch+=1                                                                                     #total number of calls per hour increases
+                    noc+=1                                                                                      #total number of calls increases
+
+                    if(active_ch<AVAIL_CH):                                                                     #call will occur if there are channels available
+
+                        while(True):
+                            x=random.uniform(-Rad,Rad)
+                            y=random.uniform(-Rad,Rad)
+                            distance=((x**2+y**2)**0.5)                                                         #printing the total distance from the centre of the cell
+                            if(distance<Rad):
+                                break
+                            else:
+                                continue
+                        path_loss=Path_Loss(distance,FREQ,B_HEIGHT)                                             #printing the total path loss
+                        avg_rsl=EIRP-path_loss+Shadow()                                                         #calculating the average received signal level
+                        rsl_cur=avg_rsl+Fade()                                                                  #calculating the current signal level
+
+                        if (rsl_cur>MOB_THRESH):                                                                #call is made if current signal level greater than the threshol
+                            active_ch+=1                                                                        #the number of channels in use getting incremented
+                            Users_Active=Users_Active+1                                                         #the active users who use the channels getting incremented                             
+                            Call_duration=int((np.random.exponential(180)))                                     #the call duration as an exponential distribution of mean 180 mins                      
+                            cd.append(Call_duration)                                                            #appending the call duration to a call duration list
+                            avg_rsl_list.append(avg_rsl)                                                        #list containing the acerage received signal level  
+                        else:
+                            nocbh+=1                                                                            #number of calls blocked per hour increases if there isn't enough call strength
+                            nocb+=1                                                                             #number of calls blocked increases if there isn't enough call strength
+                    
+                    else:
+                        nocbh+=1                                                                                #number of calls blocked per hour increases if channels aren't available
+                        nocb+=1                                                                                 #number of calls blocked increases if channels aren't available
+                     
+        gos_new_hour=(nocbh+nocdh)/noch                                                                         #the new grade of service calculated
+        gos_old_hour=nocbh/noch                                                                                 #the old grade of service calculated
+        ctr1+=1                                                                                                 #counter running for each hour
+        Print_Results_Hour(gos_new_hour,gos_old_hour,ctr1,nocbh,nocdh,noch)                                     #printing values at the end of each hour
+
+
+    Print_Final_Output(nocb,nocd,noc)                                                                           #method to print final output                                       
+SIM_2()                                                                                                         #calling the method Simulation 2
+
+                
+                
+            
+            
