@@ -1,0 +1,1 @@
+The client and server.java are the UDP Socket programming files. The project 1 is the application simulating UNIX commands and project 2 is the Calculator application.
